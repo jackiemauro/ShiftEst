@@ -1,4 +1,4 @@
-#' Single Shift Estimator Across Delta Range
+#' Single Shift Estimator Across Delta Range--obsolete, set delta2 = 0 in double shift
 #'
 #' @description Estimates the effects of shifting up 
 #' across a range of values. Includes the multiplier bootstrap
