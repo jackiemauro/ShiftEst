@@ -1,0 +1,289 @@
+simFunc <- function(N=5000,delta = 1, psi = 2, zmax = Inf, zmin = -Inf){
+  y0 = rnorm(N,0,1); meanx = c(0,0,0,0)
+  alpha = matrix(c(1,1,-1,-1),nrow = 4)
+  x = matrix(unlist(lapply(meanx, function(x) rnorm(N,x,1))), nrow = N, byrow =T)
+  z = rnorm(N, t(alpha)%*%t(x), sd = 2)
+  pos.cond = (z + delta <= zmax); min.cond = (z - delta >= zmin)
+
+  a = as.numeric(z >= y0)
+  aplus = as.numeric(z + pos.cond*delta >= y0); amin = as.numeric(z - min.cond*delta >= y0)
+  y = y0 + a*psi
+  yplus = y0 + aplus*psi; ymin = y0 + amin*psi
+
+  true.eff = psi
+  true.ymean = psi*pnorm(z)
+  true.amean = pnorm(z)
+  true.ymean.plus = psi*pnorm(z+pos.cond*delta)
+  true.amean.plus = pnorm(z+pos.cond*delta)
+  true.ymean.min = psi*pnorm(z-min.cond*delta)
+  true.amean.min = pnorm(z-min.cond*delta)
+  true.z <- dnorm(z, mean = t(alpha)%*%t(x), sd = 2)
+  true.z.min <- dnorm(z-min.cond*delta, mean = t(alpha)%*%t(x), sd = 2)
+  true.z.plus <- dnorm(z+pos.cond*delta, mean = t(alpha)%*%t(x), sd = 2)
+
+  #true.z[true.z < 1e-3] <- 1e-3; true.z[true.z.plus < 1e-3] <- 1e-3; true.z[true.z.min < 1e-3] <- 1e-3
+
+  return(data.frame(y,a,z,x,yplus,ymin,aplus,amin,
+                    true.ymean,true.amean,true.ymean.plus,true.ymean.min,
+                    true.amean.plus,true.amean.min,
+                    true.z, true.z.min, true.z.plus))
+}
+
+N = 5000 #eventually change to a vector
+nsim = 100 #eventually change to 500
+deltas = c(1,2,3) # eventually change to seq(from = 1, to = 5, length.out = 15)
+error.mean = 1
+K = c(1.99,3.99) # eventually change to c(1.99,2.99,3.99,5.99)
+B = N^(1/K)
+
+f.num <- function(df){
+  mu0 = df$true.ymean #+ rnorm(N, 1, 1)/b
+  mu.plus = df$true.ymean.plus + rnorm(N, 1, 1)/b
+  mu.min = df$true.ymean.min + rnorm(N, 2, 1)/b
+
+  ratio.plus = df$true.z.min/df$true.z + rnorm(N, 1, 1)/b
+  ratio.plus[ratio.plus > 100] <- 100
+  ratio.min = df$true.z.plus/df$true.z + rnorm(N, 2, 1)/b
+  ratio.min[ratio.min > 100] <- 100
+
+  return(ratio.plus*(df$y - mu0) + mu.plus - ratio.min*(df$y - mu0) - mu.min)
+}
+f.den <- function(df){
+  la0 = df$true.amean #+ rnorm(N, 1, 1)/b
+  la.plus = df$true.amean.plus + rnorm(N, 1, 1)/b
+  la.min = df$true.amean.min + rnorm(N, 2, 1)/b
+
+  ratio.plus = df$true.z.min/df$true.z + rnorm(N, 1, 1)/b
+  ratio.plus[ratio.plus > 100] <- 100
+  ratio.min = df$true.z.plus/df$true.z + rnorm(N, 2, 1)/b
+  ratio.min[ratio.min > 100] <- 100
+
+  return((ratio.plus - ratio.min)*(df$a - la0) + la.plus - la.min)
+}
+pi.num <- function(df){
+  mu.plus = df$true.ymean.plus + rnorm(N, 1, 1)/b
+  mu.min = df$true.ymean.min + rnorm(N, 2, 1)/b
+  return(  mu.plus - mu.min )
+}
+pi.den <- function(df){
+  la.plus = df$true.amean.plus + rnorm(N, 1, 1)/b
+  la.min = df$true.amean.min + rnorm(N, 2, 1)/b
+  return(  la.plus - la.min )
+}
+
+if.out <- pi.out <- data.frame(means = c(), sd = c(), lower = c(), upper = c(), rate = c())
+for(rate in 1:length(K)){
+  b = B[rate]
+  plug.in <- if.est <- matrix(rep(NA, length(deltas)*nsim), ncol = length(deltas))
+  for(i in 1:length(deltas)){
+    data.list <- lapply( 1:nsim, function(x) simFunc(N=N, delta = deltas[i]) )
+    plug.in[,i] <- unlist(lapply(data.list, function(x) mean(pi.num(x))/mean(pi.den(x))))
+    if.est[,i] <- unlist(lapply(data.list, function(x) mean(f.num(x))/mean(f.den(x))))
+  }
+
+  pi.means = apply(plug.in, 2, mean); pi.sd = apply(plug.in,2,sd)
+  pi.lower = pi.means - 1.96*pi.sd; pi.upper = pi.means + 1.96*pi.sd
+  pi.out = rbind(pi.out, cbind(pi.means,pi.sd,pi.lower,pi.upper,rep(K[rate],length(deltas))))
+
+  if.means = apply(if.est, 2, mean);if.sd = apply(if.est,2,sd)
+  if.lower = if.means - 1.96*if.sd; if.upper = if.means + 1.96*if.sd
+  if.out = rbind(if.out, cbind(if.means,if.sd,if.lower,if.upper,rep(K[rate],length(deltas))))
+}
+
+
+########### single shift works ##########
+simFunc <- function(N=5000,delta = 1, psi = 2, zmax = Inf, zmin = -Inf){
+  y0 = rnorm(N,0,1); meanx = c(0,0,0,0)
+  alpha = matrix(c(1,1,-1,-1),nrow = 4)
+  x = matrix(unlist(lapply(meanx, function(x) rnorm(N,x,1))), nrow = N, byrow =T)
+  z = rnorm(N, t(alpha)%*%t(x), sd = 2)
+  pos.cond = (z + delta <= zmax); min.cond = (z - delta >= zmin)
+
+  a = as.numeric(z >= y0)
+  aplus = as.numeric(z + pos.cond*delta >= y0); amin = as.numeric(z - min.cond*delta >= y0)
+  y = y0 + a*psi
+  yplus = y0 + aplus*psi; ymin = y0 + amin*psi
+
+  true.eff = psi
+  true.ymean = psi*pnorm(z)
+  true.amean = pnorm(z)
+  true.ymean.plus = psi*pnorm(z+pos.cond*delta)
+  true.amean.plus = pnorm(z+pos.cond*delta)
+  true.ymean.min = psi*pnorm(z-min.cond*delta)
+  true.amean.min = pnorm(z-min.cond*delta)
+  true.z <- dnorm(z, mean = t(alpha)%*%t(x), sd = 2)
+  true.z.min <- dnorm(z-min.cond*delta, mean = t(alpha)%*%t(x), sd = 2)
+  true.z.plus <- dnorm(z+pos.cond*delta, mean = t(alpha)%*%t(x), sd = 2)
+
+  return(data.frame(y,a,z,x,yplus,ymin,aplus,amin,
+                    true.ymean,true.amean,true.ymean.plus,true.ymean.min,
+                    true.amean.plus,true.amean.min,
+                    true.z, true.z.min, true.z.plus))
+}
+mult.bootstrap <- function(est.eff,sigma,ifvals,alpha, n,nbs){
+  eff.mat <- matrix(rep(est.eff,n), nrow = n, byrow = T)
+  sig.mat <- matrix(rep(sigma,n), nrow = n, byrow = T)
+  ifvals.std <- (ifvals - eff.mat)/sig.mat
+  mult <- matrix(2*rbinom(n*nbs, 1, .5)-1, nrow = n, ncol = nbs)
+  maxvals <- sapply(1:nbs, function(col){
+    max(abs(sum(mult[,col]*ifvals.std, na.rm = T)/sqrt(n)), na.rm = TRUE)
+  })
+  calpha <- quantile(maxvals, 1-alpha)
+  ll2 <- est.eff - calpha*sigma/sqrt(n)
+  ul2 <- est.eff + calpha*sigma/sqrt(n)
+
+  return(list(calpha = calpha, ll2 = ll2, ul2 = ul2))
+}
+f.num <- function(df){
+  mu0 = df$true.ymean+(rnorm(N,e.mean,1)/B)
+  muP = df$true.ymean.plus+(rnorm(N,e.mean,1)/B)
+  ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
+  ratM*(df$y - mu0) + muP
+}
+f.den <- function(df){
+  la0 = df$true.amean+(rnorm(N,e.mean,1)/B)
+  laP = df$true.amean.plus+(rnorm(N,e.mean,1)/B)
+  ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
+  ratM*(df$a - la0) + laP
+}
+
+### run some simulations adding various noise ----
+# make sure to clear each time
+# going to add steps towards double shift and see if/when it breaks
+
+rm(list = ls())
+nsim = 100
+K = c(1.99,2.99,3.99,5.99)
+psi <- true.eff <- 2
+N = 5000 # size of dataset
+bootstrap.n = 10 # bootstrap samples
+delta = seq(.5, 5.5, length = 15)
+zmax = Inf; zmin = -Inf
+e.mean <- 2 # mean of error term
+
+pb <- txtProgressBar(min = 0, max = nsim*length(K), style = 3)
+bigIFest <- bigIFsd <- bigPIest <- bigPIsd <- bigMBL <- bigMBU <- bigPWL <- bigPWU <- bigCover <- bigPWCover <- list()
+bigMBLPI <- bigMBUPI <- bigPWLPI <- bigPWUPI <- bigCoverPI <- bigPWCoverPI <- bigMBL
+for(j in 1:length(K)){
+  r = K[j]
+  #print(paste('rate = ',r))
+  B = N^(1/r)
+  PI1 = matrix(rep(NA,nsim*length(delta)), ncol = length(delta))
+  IF1 = matrix(rep(NA,nsim*length(delta)), ncol = length(delta))
+  MBlower = matrix(rep(NA,nsim*length(delta)), ncol = length(delta))
+  MBupper <- PWlower <- PWupper <- ifvals <- pwcover <- pwcoverPI <- MBlower
+  MBupperPI <- PWlowerPI <- PWupperPI <- MBlowerPI <- MBlower
+  cover <- coverPI <- rep(NA,nsim)
+
+  for(i in 1:nsim){
+    #print(paste('i = ',i))
+    datlist <- lapply(delta, function(d) simFunc(N, delta = d, psi = psi, zmax = zmax, zmin = zmin))
+
+    PI1[i,] = unlist(lapply(datlist, function(d) mean(d$true.ymean.plus+(rnorm(N,e.mean,1)/B) - d$y)/mean(d$true.amean.plus+(rnorm(N,e.mean,1)/B) - d$a)))
+    IF1[i,] = unlist(lapply(datlist, function(d) mean(f.num(d))/mean(f.den(d))))
+
+    ll2 <- ul2 <- ul1 <- ll1 <- ll2PI <- ul2PI <- ll1PI <- ul1PI <- rep(NA,length(delta))
+    for(jj in 1:length(delta)){
+      psihat = IF1[i,jj]
+      #ifvals = (f.num(datlist[[jj]]) - psihat*f.den(datlist[[jj]])) / mean(datlist[[jj]]$true.amean.plus - datlist[[jj]]$a)
+      ifvals = (f.num(datlist[[jj]]) - psihat*f.den(datlist[[jj]])) / mean(datlist[[jj]]$true.amean.plus - datlist[[jj]]$true.amean)
+      mb <- mult.bootstrap(est.eff=psihat,sigma=sd(ifvals),ifvals=ifvals,alpha=.05,n=N,nbs=bootstrap.n)
+      ll2[jj] <- mb$ll2; ul2[jj] <- mb$ul2
+
+      # pointwise confidence interval
+      ll1[jj] <- psihat - qnorm(.975)*sd(ifvals)/sqrt(N)
+      ul1[jj] <- psihat + qnorm(.975)*sd(ifvals)/sqrt(N)
+
+      # corrected confidence intervals for plug in
+      pi.est <- PI1[i,jj]
+      ll1PI[jj] <- pi.est - qnorm(.975)*sd(ifvals)/sqrt(N)
+      ul1PI[jj] <- pi.est + qnorm(.975)*sd(ifvals)/sqrt(N)
+      ll2PI[jj] <- pi.est - (psihat - ll2[jj])
+      ul2PI[jj] <- pi.est + (ul2[jj] - psihat)
+    }
+
+    MBlower[i,] = ll2; MBupper[i,] = ul2
+    PWlower[i,] = ll1; PWupper[i,] = ul1
+
+    MBlowerPI[i,] = ll2PI; MBupperPI[i,] = ul2PI
+    PWlowerPI[i,] = ll1PI; PWupperPI[i,] = ul1PI
+
+    cover[i] = (max(ll2) < psi) & (min(ul2) > psi)
+    coverPI[i] = (max(ll2PI) < psi) & (min(ul2PI) > psi)
+    pwcover[i,] = (ll1<psi) & (ul1>psi)
+    pwcoverPI[i,] = (ll1PI<psi) & (ul1PI>psi)
+    setTxtProgressBar(pb, (j-1)*nsim + i)
+  }
+  #write.csv(PI1, paste('tempPI_',j,sep = ""))
+  #write.csv(IF1, paste('tempPI_',j,sep = ""))
+  #write.csv(cbind(MBlower,MBupper), paste('tempMB_',j,sep = ""))
+  #write.csv(cbind(MBlowerPI,MBupperPI), paste('tempMBPI_',j,sep = ""))
+
+  bigPIest[[j]] = apply(PI1,2,mean); bigPIsd[[j]] = apply(PI1,2,sd)
+  bigIFest[[j]] =  apply(IF1,2,mean); bigIFsd[[j]] = apply(IF1,2,sd)
+
+  bigMBL[[j]] = MBlower; bigMBU[[j]] = MBupper
+  bigPWL[[j]] = PWlower; bigPWU[[j]] = PWupper
+
+  bigMBLPI[[j]] = MBlowerPI; bigMBUPI[[j]] = MBupperPI
+  bigPWLPI[[j]] = PWlowerPI; bigPWUPI[[j]] = PWupperPI
+
+  bigCover[[j]] = mean(cover)
+  bigPWCover[[j]] = apply(pwcover,2,mean)
+
+  bigCoverPI[[j]] = mean(coverPI)
+  bigPWCoverPI[[j]] = apply(pwcoverPI,2,mean)
+}
+close(pb)
+
+
+
+df = data.frame(upper.mb = rep(unlist(lapply(bigMBU, function(x) apply(x,2,mean))),2),
+                lower.mb = rep(unlist(lapply(bigMBL, function(x) apply(x,2,mean))),2),
+                upper.pw = rep(unlist(lapply(bigPWU, function(x) apply(x,2,mean))),2),
+                lower.pw = rep(unlist(lapply(bigPWL, function(x) apply(x,2,mean))),2),
+                est = c(unlist(bigPIest), unlist(bigIFest)),
+                sd = c(unlist(bigPIsd), unlist(bigIFsd)),
+                type = rep(c("PI","IF"), each = length(unlist(bigPIest))),
+                delta = rep(delta, 2*length(K)),
+                rate = rep(round(K,1), each = length(delta), times = 2)
+)
+df$lower.emp <- df$est - 1.96*df$sd
+df$upper.emp <- df$est + 1.96*df$sd
+
+emp.cover <- (df$lower.emp<2) & (df$upper.emp>2)
+
+# coverage
+cover <- data.frame(mb = rep(unlist(bigCover),each = length(delta)),
+                    pw = unlist(bigPWCover),
+                    emp.if = emp.cover[21:40],
+                    emp.pi = emp.cover[1:20],
+                    delta = rep(delta, length(K)),
+                    rate = rep(round(K), each = length(delta)))
+ggplot(df) +
+  geom_hline(yintercept = psi, colour = 'red')+
+  geom_point(aes(x = delta, y = est, shape = type))+
+  geom_line(aes(x = delta, y = est, colour = type))+
+  geom_ribbon(aes(ymin = lower.pw, ymax = upper.pw, x = delta, fill = "Pointwise"), alpha = .3) +
+  geom_ribbon(aes(ymin = lower.mb, ymax = upper.mb, x = delta, fill = "Uniform"), alpha = .3)+
+  facet_wrap(~rate)+
+  theme_bw() +
+  scale_color_manual(values = c('black', 'grey'))+
+  theme(legend.position="bottom")+
+  coord_cartesian(ylim = c(0, 3)) +
+  labs(y = paste('Estimates (',nsim,' simulations)', sep = ""), x = "Shift Amount",
+       title = "Estimates by estimator type, error rate and shift amount")
+
+ggplot(df) +
+  geom_hline(yintercept = psi, colour = 'red')+
+  geom_point(aes(x = delta, y = est, shape = type))+
+  geom_line(aes(x = delta, y = est, colour = type))+
+  geom_ribbon(aes(ymin = lower.emp, ymax = upper.emp, x = delta, fill = type), alpha = .3) +
+  facet_wrap(~rate)+
+  theme_bw() +
+  scale_color_manual(values = c('black', 'grey'))+
+  scale_fill_manual(values = c('black', 'grey'))+
+  theme(legend.position="bottom")+
+  coord_cartesian(ylim = c(0, 3.5)) +
+  labs(y = paste('Estimates (',nsim,' simulations)', sep = ""), x = "Shift Amount",
+       title = "Estimates by estimator type, error rate and shift amount")
