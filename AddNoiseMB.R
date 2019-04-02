@@ -327,8 +327,9 @@ g <- ggplot(df) +
   geom_hline(yintercept = 0)
 
 ggsave(filename = 'absbias_v_delta.png', g, height = 4, width = 7)
-co### run some simulations of double shift adding assym noise ----
+### run some simulations of double shift adding assym noise ----
 f.num2 <- function(df){
+  mu0 = df$true.ymean+(rnorm(N,e.mean1,1)/B) 
   muP = df$true.ymean.plus+(rnorm(N,e.mean1,1)/B)
   muM = df$true.ymean.min+(rnorm(N,e.mean2,1)/B)
   ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean2,1)/B)
@@ -348,7 +349,7 @@ nsim = 100
 K = c(1.99,2.99,3.99,5.99)
 psi <- true.eff <- 2
 N = 5000 # size of dataset
-bootstrap.n = 1e4 # bootstrap samples
+bootstrap.n = 10 # bootstrap samples
 delta = seq(1, 5, length = 15)
 zmax = Inf; zmin = -Inf
 # for double shift, can't add symmetric error or it'll cancel largely
@@ -406,10 +407,10 @@ for(j in 1:length(K)){
     pwcoverPI[i,] = (ll1PI<psi) & (ul1PI>psi)
     setTxtProgressBar(pb, (j-1)*nsim + i)
   }
-  write.csv(PI1, paste('tempPI_',j,sep = ""))
-  write.csv(IF1, paste('tempPI_',j,sep = ""))
-  write.csv(cbind(MBlower,MBupper), paste('tempMB_',j,sep = ""))
-  write.csv(cbind(MBlowerPI,MBupperPI), paste('tempMBPI_',j,sep = ""))
+  #write.csv(PI1, paste('tempPI_',j,sep = ""))
+  #write.csv(IF1, paste('tempPI_',j,sep = ""))
+  #write.csv(cbind(MBlower,MBupper), paste('tempMB_',j,sep = ""))
+  #write.csv(cbind(MBlowerPI,MBupperPI), paste('tempMBPI_',j,sep = ""))
   
   bigPIest[[j]] = apply(PI1,2,mean); bigPIsd[[j]] = apply(PI1,2,sd)
   bigIFest[[j]] =  apply(IF1,2,mean); bigIFsd[[j]] = apply(IF1,2,sd)
@@ -452,9 +453,8 @@ cover <- data.frame(mb = rep(unlist(bigCover),each = length(delta)),
                     emp.pi = emp.cover[1:(length(emp.cover)/2)],
                     delta = rep(delta, length(K)),
                     rate = rep(round(K), each = length(delta)))
-write.csv(cover, file = 'simulationCoverageDub.csv')
-
-write.csv(df, file = 'simulationOutputDub.csv') 
+#write.csv(cover, file = 'simulationCoverageDub.csv')
+#write.csv(df, file = 'simulationOutputDub.csv') 
 
 library(ggplot2)
 g<-ggplot(df) + 
@@ -470,7 +470,7 @@ g<-ggplot(df) +
   coord_cartesian(ylim = c(0, 3)) +
   labs(y = paste('Estimates (',nsim,' simulations)', sep = ""), x = "Shift Amount", 
        title = "Estimates by estimator type, error rate and shift amount")
-ggsave('type_rate_shift_plotsDub.png',g,height = 4, width = 7) #mu=2
+#ggsave('type_rate_shift_plotsDub.png',g,height = 4, width = 7) #mu=2
 
 g2<-ggplot(df) + 
   geom_hline(yintercept = psi, colour = 'red')+
@@ -485,4 +485,5 @@ g2<-ggplot(df) +
   coord_cartesian(ylim = c(0, 3.5)) +
   labs(y = paste('Estimates (',nsim,' simulations)', sep = ""), x = "Shift Amount", 
        title = "Estimates by estimator type, error rate and shift amount")
-ggsave('type_rate_shift_plots_empSDDub.png',g2,height = 4, width = 7)
+#ggsave('type_rate_shift_plots_empSDDub.png',g2,height = 4, width = 7)
+
