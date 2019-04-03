@@ -92,6 +92,16 @@ for(rate in 1:length(K)){
 
 
 ########### single shift works ##########
+
+# make sure to clear each time
+# going to add steps towards double shift and see if/when it breaks
+# step 1: add no noise y.mean.min and no noise a.mean.min (as well as no noise ratio) -- works (sorta)
+# step 2: add 0 mean noise to y.mean.min and a.mean.min -- also sorta works
+# step 3: add N(1,1) noise to y.mean.min -- pulling away from truth at low values of delta
+# step 4: add N(1,1) noise to a.mean.min -- fails badly
+# step 5: returning to no noise y.mean.min and a.mean.min to make sure it still works -- still (kinda)
+# step 6: add ratio noise N(2,1)
+
 rm(list = ls())
 simFunc <- function(N=5000,delta = 1, psi = 2, zmax = Inf, zmin = -Inf){
   y0 = rnorm(N,0,1); meanx = c(0,0,0,0)
@@ -140,22 +150,17 @@ f.num <- function(df){
   muP = df$true.ymean.plus +(rnorm(N,e.mean,1)/B)
   muM = df$true.ymean.min #+(rnorm(N,e.mean,1)/B)
   ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
-  ratP = df$true.z.min/df$true.z #+(rnorm(N,e.mean,1)/B)
-  (ratM*(df$y - mu0) + muP) - (ratP*(df$y - df$true.ymean) + df$true.ymean.min)
+  ratP = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
+  (ratM*(df$y - mu0) + muP) - (ratP*(df$y - df$true.ymean) + muM)
 }
 f.den <- function(df){
   la0 = df$true.amean+(rnorm(N,e.mean,1)/B)
   laP = df$true.amean.plus+(rnorm(N,e.mean,1)/B)
   laM = df$true.amean.min #+(rnorm(N,e.mean,1)/B)
   ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
-  ratP = df$true.z.plus/df$true.z #+(rnorm(N,e.mean,1)/B)
-  (ratM*(df$a - la0) + laP) - (ratP*(df$a - df$true.amean) + df$true.amean.min)
+  ratP = df$true.z.plus/df$true.z +(rnorm(N,e.mean,1)/B)
+  (ratM*(df$a - la0) + laP) - (ratP*(df$a - df$true.amean) + laM)
 }
-
-# make sure to clear each time
-# going to add steps towards double shift and see if/when it breaks
-# step 1: add no noise y.mean.min and a.mean.min -- fails
-# step 2: add just no noise y.mean.min
 
 nsim = 100
 K = c(1.99,2.99,3.99,5.99)
@@ -184,8 +189,8 @@ for(j in 1:length(K)){
     #print(paste('i = ',i))
     datlist <- lapply(delta, function(d) simFunc(N, delta = d, psi = psi, zmax = zmax, zmin = zmin))
 
-    PI1[i,] = unlist(lapply(datlist, function(d) mean(d$true.ymean.plus+(rnorm(N,e.mean,1)/B) - d$true.ymean.min)/
-                              mean(d$true.amean.plus+(rnorm(N,e.mean,1)/B) - d$true.amean.min)))
+    PI1[i,] = unlist(lapply(datlist, function(d) mean(d$true.ymean.plus+(rnorm(N,e.mean,1)/B) - (d$true.ymean.min))/
+                              mean(d$true.amean.plus+(rnorm(N,e.mean,1)/B) - (d$true.amean.min))))
     IF1[i,] = unlist(lapply(datlist, function(d) mean(f.num(d))/mean(f.den(d))))
 
     ll2 <- ul2 <- ul1 <- ll1 <- ll2PI <- ul2PI <- ll1PI <- ul1PI <- rep(NA,length(delta))
