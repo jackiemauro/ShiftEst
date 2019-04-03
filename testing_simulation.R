@@ -100,7 +100,14 @@ for(rate in 1:length(K)){
 # step 3: add N(1,1) noise to y.mean.min -- pulling away from truth at low values of delta
 # step 4: add N(1,1) noise to a.mean.min -- fails badly
 # step 5: returning to no noise y.mean.min and a.mean.min to make sure it still works -- still (kinda)
-# step 6: add ratio noise N(2,1)
+# step 6: add ratio noise N(2,1) -- still very low variance and pulling away at low delta
+# step 7: add N(2,1) noise to mu0 & la0 terms in xi(-d) term -- breaks. if and pi almost identical, low variance and far at low deltas
+# step 8: add N(1,1) noise to y.mean.min and a.mean.min -- no improvement
+# TYPO in ratio for numerator, rerunning under same conditions as step8 -- variance better but if and pi still totally identical
+# step 9: changing ratio error to N(1,1) -- slightly better but not good
+# step 10: changing e.mean to 3 -- slightly better but not good (pi detaching more at r>3 but if still biased at low delta)
+# step 11: N(-1,1) on muM and laM -- bad bad bad
+# step 12: going back to zero noise on mu0 in xi(-d) term --works! (up to r=6 when it goes crazy)
 
 rm(list = ls())
 simFunc <- function(N=5000,delta = 1, psi = 2, zmax = Inf, zmin = -Inf){
@@ -148,17 +155,17 @@ mult.bootstrap <- function(est.eff,sigma,ifvals,alpha, n,nbs){
 f.num <- function(df){
   mu0 = df$true.ymean+(rnorm(N,e.mean,1)/B)
   muP = df$true.ymean.plus +(rnorm(N,e.mean,1)/B)
-  muM = df$true.ymean.min #+(rnorm(N,e.mean,1)/B)
+  muM = df$true.ymean.min +(rnorm(N,-1,1)/B)
   ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
-  ratP = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
+  ratP = df$true.z.plus/df$true.z +(rnorm(N,1,1)/B)
   (ratM*(df$y - mu0) + muP) - (ratP*(df$y - df$true.ymean) + muM)
 }
 f.den <- function(df){
   la0 = df$true.amean+(rnorm(N,e.mean,1)/B)
   laP = df$true.amean.plus+(rnorm(N,e.mean,1)/B)
-  laM = df$true.amean.min #+(rnorm(N,e.mean,1)/B)
+  laM = df$true.amean.min +(rnorm(N,-1,1)/B)
   ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
-  ratP = df$true.z.plus/df$true.z +(rnorm(N,e.mean,1)/B)
+  ratP = df$true.z.plus/df$true.z +(rnorm(N,1,1)/B)
   (ratM*(df$a - la0) + laP) - (ratP*(df$a - df$true.amean) + laM)
 }
 
@@ -169,7 +176,7 @@ N = 5000 # size of dataset
 bootstrap.n = 10 # bootstrap samples
 delta = seq(.5, 5.5, length = 15)
 zmax = Inf; zmin = -Inf
-e.mean <- 2 # mean of error term
+e.mean <- 3 # mean of error term
 
 pb <- txtProgressBar(min = 0, max = nsim*length(K), style = 3)
 bigIFest <- bigIFsd <- bigPIest <- bigPIsd <- bigMBL <- bigMBU <- bigPWL <- bigPWU <- bigCover <- bigPWCover <- list()
@@ -189,8 +196,8 @@ for(j in 1:length(K)){
     #print(paste('i = ',i))
     datlist <- lapply(delta, function(d) simFunc(N, delta = d, psi = psi, zmax = zmax, zmin = zmin))
 
-    PI1[i,] = unlist(lapply(datlist, function(d) mean(d$true.ymean.plus+(rnorm(N,e.mean,1)/B) - (d$true.ymean.min))/
-                              mean(d$true.amean.plus+(rnorm(N,e.mean,1)/B) - (d$true.amean.min))))
+    PI1[i,] = unlist(lapply(datlist, function(d) mean(d$true.ymean.plus+(rnorm(N,e.mean,1)/B) - (d$true.ymean.min+(rnorm(N,-1,1)/B)))/
+                              mean(d$true.amean.plus+(rnorm(N,e.mean,1)/B) - (d$true.amean.min+(rnorm(N,-1,1)/B)))))
     IF1[i,] = unlist(lapply(datlist, function(d) mean(f.num(d))/mean(f.den(d))))
 
     ll2 <- ul2 <- ul1 <- ll1 <- ll2PI <- ul2PI <- ll1PI <- ul1PI <- rep(NA,length(delta))
