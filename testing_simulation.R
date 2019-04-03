@@ -108,6 +108,26 @@ for(rate in 1:length(K)){
 # step 10: changing e.mean to 3 -- slightly better but not good (pi detaching more at r>3 but if still biased at low delta)
 # step 11: N(-1,1) on muM and laM -- bad bad bad
 # step 12: going back to zero noise on mu0 in xi(-d) term --works! (up to r=6 when it goes crazy)
+# step 13: adding N(1,1) error on mu0 and la0 in xi(-d) term -- does badly at 4 and 3 but well at 6???
+# step 14: error term has to be the same on mu0 and la0, changing to N(1,1) -- no good
+# step 15: changing to mean 0 -- still bad
+# step 16: no noise on any mu0/la0 term
+
+# restarting
+# no noise on anything -- works
+# N(0,1) on mu0/la0; N(1,1) on muP/muM -- works
+# add N(1,1) on laP/laM -- works (plug in does just as well on all these iterations)
+# add N(1,1) on ratio terms -- works
+# add N(2,1) on laP -- biased downwards
+# setting laP noise back to N(1,1) and putting N(2,1) on muP -- biased up
+# setting both laP and muP to N(2,1) --still biased down, IF and PI almost identical
+# replacing mu0/la0 with truth in second term -- still biased down
+# changing ratio errors and mu0/la0 to N(0,1), muM/laM to N(0,1), muP/laP to N(1,1)
+
+# need ratP*mu0 to be close to muP. Know E(ratP*mu0) = muP
+# ==> (ratP + rnorm(n,0,1)/B)*(mu0 + rnorm(n,0,1)) vs muP + rnorm(n,1,1)/B
+# ==> muP + ratP*rnorm(n,0,1)/B + mu0*rnorm(n,0,1)/B + (rnorm(n,0,1)/B * rnorm(n,0,1)/B) vs muP + rnorm(n,1,1)/B
+
 
 rm(list = ls())
 simFunc <- function(N=5000,delta = 1, psi = 2, zmax = Inf, zmin = -Inf){
@@ -153,21 +173,26 @@ mult.bootstrap <- function(est.eff,sigma,ifvals,alpha, n,nbs){
   return(list(calpha = calpha, ll2 = ll2, ul2 = ul2))
 }
 f.num <- function(df){
-  mu0 = df$true.ymean+(rnorm(N,e.mean,1)/B)
-  muP = df$true.ymean.plus +(rnorm(N,e.mean,1)/B)
-  muM = df$true.ymean.min +(rnorm(N,-1,1)/B)
-  ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
-  ratP = df$true.z.plus/df$true.z +(rnorm(N,1,1)/B)
-  (ratM*(df$y - mu0) + muP) - (ratP*(df$y - df$true.ymean) + muM)
+  mu0 = df$true.ymean+(rnorm(N,1,1)/B)
+  muP = df$true.ymean.plus +(rnorm(N,2,1)/B)
+  muM = df$true.ymean.min +(rnorm(N,1,1)/B)
+  ratM = df$true.z.min/df$true.z +(rnorm(N,0,1)/B)
+  ratP = df$true.z.plus/df$true.z +(rnorm(N,0,1)/B)
+  (ratM*(df$y - (df$true.ymean+(rnorm(N,2,1)/B))) + muP) - (ratP*(df$y - mu0) + muM)
 }
 f.den <- function(df){
-  la0 = df$true.amean+(rnorm(N,e.mean,1)/B)
-  laP = df$true.amean.plus+(rnorm(N,e.mean,1)/B)
-  laM = df$true.amean.min +(rnorm(N,-1,1)/B)
-  ratM = df$true.z.min/df$true.z +(rnorm(N,e.mean,1)/B)
-  ratP = df$true.z.plus/df$true.z +(rnorm(N,1,1)/B)
-  (ratM*(df$a - la0) + laP) - (ratP*(df$a - df$true.amean) + laM)
+  la0 = df$true.amean +(rnorm(N,1,1)/B)
+  laP = df$true.amean.plus +(rnorm(N,2,1)/B)
+  laM = df$true.amean.min +(rnorm(N,1,1)/B)
+  ratM = df$true.z.min/df$true.z +(rnorm(N,0,1)/B)
+  ratP = df$true.z.plus/df$true.z +(rnorm(N,0,1)/B)
+  (ratM*(df$a - (df$true.amean +(rnorm(N,2,1)/B))) + laP) - (ratP*(df$a - la0) + laM)
 }
+
+df = simFunc(delta = .5)
+mean(f.num(df))/mean(f.den(df))
+
+
 
 nsim = 100
 K = c(1.99,2.99,3.99,5.99)
@@ -176,14 +201,14 @@ N = 5000 # size of dataset
 bootstrap.n = 10 # bootstrap samples
 delta = seq(.5, 5.5, length = 15)
 zmax = Inf; zmin = -Inf
-e.mean <- 3 # mean of error term
+e.mean <- 2 # mean of error term
 
 pb <- txtProgressBar(min = 0, max = nsim*length(K), style = 3)
 bigIFest <- bigIFsd <- bigPIest <- bigPIsd <- bigMBL <- bigMBU <- bigPWL <- bigPWU <- bigCover <- bigPWCover <- list()
 bigMBLPI <- bigMBUPI <- bigPWLPI <- bigPWUPI <- bigCoverPI <- bigPWCoverPI <- bigMBL
 for(j in 1:length(K)){
   r = K[j]
-  #print(paste('rate = ',r))
+  print(paste('rate = ',r))
   B = N^(1/r)
   PI1 = matrix(rep(NA,nsim*length(delta)), ncol = length(delta))
   IF1 = matrix(rep(NA,nsim*length(delta)), ncol = length(delta))
@@ -196,8 +221,8 @@ for(j in 1:length(K)){
     #print(paste('i = ',i))
     datlist <- lapply(delta, function(d) simFunc(N, delta = d, psi = psi, zmax = zmax, zmin = zmin))
 
-    PI1[i,] = unlist(lapply(datlist, function(d) mean(d$true.ymean.plus+(rnorm(N,e.mean,1)/B) - (d$true.ymean.min+(rnorm(N,-1,1)/B)))/
-                              mean(d$true.amean.plus+(rnorm(N,e.mean,1)/B) - (d$true.amean.min+(rnorm(N,-1,1)/B)))))
+    PI1[i,] = unlist(lapply(datlist, function(d) mean(d$true.ymean.plus+(rnorm(N,1,1)/B) - (d$true.ymean.min+(rnorm(N,0,1)/B)))/
+                              mean(d$true.amean.plus+(rnorm(N,1,1)/B) - (d$true.amean.min+(rnorm(N,0,1)/B)))))
     IF1[i,] = unlist(lapply(datlist, function(d) mean(f.num(d))/mean(f.den(d))))
 
     ll2 <- ul2 <- ul1 <- ll1 <- ll2PI <- ul2PI <- ll1PI <- ul1PI <- rep(NA,length(delta))
@@ -239,6 +264,7 @@ for(j in 1:length(K)){
 
   bigPIest[[j]] = apply(PI1,2,mean); bigPIsd[[j]] = apply(PI1,2,sd)
   bigIFest[[j]] =  apply(IF1,2,mean); bigIFsd[[j]] = apply(IF1,2,sd)
+  print(apply(IF1,2,mean))
 
   bigMBL[[j]] = MBlower; bigMBU[[j]] = MBupper
   bigPWL[[j]] = PWlower; bigPWU[[j]] = PWupper
