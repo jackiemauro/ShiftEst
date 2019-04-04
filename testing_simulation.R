@@ -197,39 +197,64 @@ pi.den <- function(df){df$true.amean.plus+rnorm(N,df$z+delta,1)/B#+(rnorm(N,1,1)
   }
 get_if <- function(df){mean(f.num(df))/mean(f.den(df))}
 get_pi <- function(df){mean(pi.num(df))/mean(pi.den(df))}
-single.delta <- function(del){
-  dfs = lapply(1:n.sim, function(x) simFunc(N=N, delta = del))
+single.delta <- function(delta){
+  dfs = lapply(1:n.sim, function(x) simFunc(N=N, delta = delta))
   if.ests = unlist(lapply(dfs, function(df) get_if(df)))
   pi.ests = unlist(lapply(dfs, function(df) get_pi(df)))
   return(data.frame(if.ests = if.ests, pi.ests = pi.ests))
 }
 
 n.sim = 500
-deltas = seq(.5,5,length.out = 4)
+deltas = seq(.5,4.5,length.out = 15)
 K = c(1.99,2.99,3.99,5.99)
-Ns = c(100,5000)
+Ns = c(100,1000,5000,10000)
 psi <- true.eff <- 2
-if.out <- pi.out <- list()
+output <- list()
 for(s.size in 1:length(Ns)){
   N = Ns[s.size]
-  if.by.rate <- pi.by.rate <- data.frame()
+  if.mean.by.rate <- pi.mean.by.rate <- if.sd.by.rate <- pi.sd.by.rate <- c()
   for(rate in 1:length(K)){
     print(round(K[rate]))
     B = N^(1/K[rate])
-    if.ests <- pi.ests <- matrix(rep(NA, length(deltas)*n.sim), ncol = length(deltas))
+    if.ests <- pi.ests <- if.sds <- pi.sds <- c()
     for(d in 1:length(deltas)){
-      ests = single.delta(deltas[d])
-      if.ests[,d] = ests$if.ests
-      pi.ests[,d] = ests$pi.ests
+      delta = deltas[d]
+      ests = single.delta(delta)
+      if.ests[d] = mean(ests$if.ests); if.sds[d] = sd(ests$if.ests)
+      pi.ests[d] = mean(ests$pi.ests); pi.sds[d] = sd(ests$pi.ests)
     }
-    if.by.rate = rbind(if.by.rate, if.ests)
-    pi.by.rate = rbind(pi.by.rate, pi.ests)
+    if.mean.by.rate = c(if.mean.by.rate, if.ests)
+    pi.mean.by.rate = c(pi.mean.by.rate, pi.ests)
+    if.sd.by.rate = c(if.sd.by.rate, if.sds)
+    pi.sd.by.rate = c(pi.sd.by.rate, pi.sds)
   }
-  if.out[[s.size]] = if.by.rate
-  pi.out[[s.size]] = pi.by.rate
+  if.out = data.frame(mean = if.mean.by.rate, sd = if.sd.by.rate, delta.val = rep(deltas, length(K)), rate.val = rep(round(K), each = length(deltas)))
+  pi.out = data.frame(mean = pi.mean.by.rate, sd = pi.sd.by.rate, delta.val = rep(deltas, length(K)), rate.val = rep(round(K), each = length(deltas)))
+  out = rbind(if.out, pi.out)
+  out$type = c(rep("IF", dim(if.out)[1]),rep("PI", dim(pi.out)[1]))
+  out$lower.emp = out$mean - 1.96*out$sd
+  out$upper.emp = out$mean + 1.96*out$sd
+  out$s.size = N
+
+  output[[s.size]] = out
 }
 
-
+make.my.plot <- function(df){
+  ggplot(df) +
+    geom_hline(yintercept = psi, colour = 'red')+
+    geom_point(aes(x = delta.val, y = mean, shape = type))+
+    geom_line(aes(x = delta.val, y = mean, colour = type))+
+    geom_ribbon(aes(ymin = lower.emp, ymax = upper.emp, x = delta.val, fill = type), alpha = .3) +
+    facet_wrap(~rate.val)+
+    theme_bw() +
+    scale_color_manual(values = c('black', 'grey'))+
+    scale_fill_manual(values = c('black', 'grey'))+
+    theme(legend.position="bottom")+
+    coord_cartesian(ylim = c(0, 4)) +
+    labs(y = paste('Estimates (',n.sim,' simulations, sample size = ', df$s.size,')', sep = ""), x = "Shift Amount",
+         title = "Estimates by estimator type, error rate and shift amount")
+}
+plots <- lapply(output, function(x) make.my.plot(x))
 
 nsim = 100
 K = c(1.99,2.99,3.99,5.99)
