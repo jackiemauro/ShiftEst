@@ -50,7 +50,7 @@ covs3 = cbind(white,loslastloc,
              numoftotalmisconducts)
 
 source('~jacquelinemauro/Dropbox/double robust causality/tempR/longlat.R')
-# using minimum distance prison longitude and latitude 
+# using minimum distance prison longitude and latitude
 min.prison <- apply(dat[,2:26],1,which.min)
 min.lat <- locs[min.prison,1]
 min.long <- locs[min.prison,2]
@@ -137,10 +137,10 @@ delta = c(20,30,60,90)
 output <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs3,
                              a = dat$no.visits.last.loc,delta = delta,
                              Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 2, pos.cutoff = 100)
-p <- plot.cace(output) + 
-  geom_hline(yintercept = 0) + 
+p <- plot.cace(output) +
+  geom_hline(yintercept = 0) +
   theme_bw()+
   ggtitle('Increase in recidivism when visitation is lost')
 ggsave(filename = 'recidivismEs_2foldNoDummsRangRangGLM.png',p,height = 4, width = 7)
@@ -155,10 +155,10 @@ ggsave(filename = 'recidivismEst_child.png',p,height = 4, width = 7)
 output.child <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs3,
                              a = dat$no.childvisits,delta = delta,
                              Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 2, pos.cutoff = 100)
-p <- plot.cace(output.child) + 
-  geom_hline(yintercept = 0) + 
+p <- plot.cace(output.child) +
+  geom_hline(yintercept = 0) +
   theme_bw()+
   ggtitle('Increase in recidivism when child visitation is lost')
 ggsave(filename = 'recidivismEs_child2foldNoDummsRangRangGLM.png',p,height = 4, width = 7)
@@ -169,9 +169,9 @@ delta = c(20,40,60,90,120)
 output <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                              a = dat$no.visits.last.loc,delta = delta,
                              Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 1, pos.cutoff = Inf)
-p1 <- plot.cace(output) + 
+p1 <- plot.cace(output) +
   ggtitle("Effect of No Visitation on Recidivism, Moving Away")+
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -186,9 +186,9 @@ write.csv(out1df, 'recidivismEst_SingleShiftUp.csv')
 output <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                              a = dat$no.visits.last.loc,delta = delta,
                              Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 1, pos.cutoff = Inf)
-p1 <- plot.cace(output) + 
+p1 <- plot.cace(output) +
   ggtitle("Effect of No Visitation on Recidivism, Moving Away")+
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -203,9 +203,9 @@ write.csv(out1df, 'recidivismEst_SingleShiftUpSL.csv')
 output <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                              a = dat$no.visits.last.loc,delta = delta,
                              Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 1, pos.cutoff = Inf, alpha = 0.1)
-p1 <- plot.cace(output) + 
+p1 <- plot.cace(output) +
   ggtitle("Effect of No Visitation on Recidivism, Moving Away")+
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -221,9 +221,9 @@ write.csv(out1df, 'recidivismEst_SingleShiftUpSL90.csv')
 output <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs3,
                              a = dat$no.visits.last.loc,delta = delta,
                              Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 1, pos.cutoff = Inf)
-p1 <- plot.cace(output) + 
+p1 <- plot.cace(output) +
   ggtitle("Effect of All Visitation on Recidivism, Moving Away")+
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -236,7 +236,7 @@ output.child <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                                    Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                                    zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                    nfolds = 1, pos.cutoff = Inf)
-p2 <- plot.cace(output.child) + 
+p2 <- plot.cace(output.child) +
   ggtitle("Effect of No Child Visitation on Recidivism, Moving Away")+
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -253,7 +253,7 @@ output.child <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                                    Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
                                    zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                    nfolds = 1, pos.cutoff = Inf)
-p2 <- plot.cace(output.child) + 
+p2 <- plot.cace(output.child) +
   ggtitle("Effect of No Child Visitation on Recidivism, Moving Away")+
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -269,7 +269,7 @@ output.child <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs3
                                    Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                                    zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                    nfolds = 1, pos.cutoff = Inf)
-p2 <- plot.cace(output.child) + 
+p2 <- plot.cace(output.child) +
   ggtitle("Effect of Child Visitation on Recidivism, Moving Away")+
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -283,7 +283,7 @@ output2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                              Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                              zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 1, pos.cutoff = Inf)
-p3 <- plot.cace(output2) + 
+p3 <- plot.cace(output2) +
   ggtitle("Effect of All Visitation on Recidivism, Moving Closer") +
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -299,7 +299,7 @@ output2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
                               zmin = min(dat$minTime),zmax = max(dat$maxtime),
                               nfolds = 1, pos.cutoff = Inf)
-p3 <- plot.cace(output2) + 
+p3 <- plot.cace(output2) +
   ggtitle("Effect of All Visitation on Recidivism, Moving Closer") +
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -315,7 +315,7 @@ output2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs3,
                               Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                               zmin = min(dat$minTime),zmax = max(dat$maxtime),
                               nfolds = 1, pos.cutoff = Inf)
-p3 <- plot.cace(output2) + 
+p3 <- plot.cace(output2) +
   ggtitle("Effect of All Visitation on Recidivism, Moving Closer") +
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -326,7 +326,7 @@ output.child2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs
                                    Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                                    zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                    nfolds = 1, pos.cutoff = Inf)
-p4 <- plot.cace(output.child2) + 
+p4 <- plot.cace(output.child2) +
   ggtitle("Effect of Child Visitation on Recidivism, Moving Closer")+
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -342,7 +342,7 @@ output.child2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs
                                     Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
                                     zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                     nfolds = 1, pos.cutoff = Inf)
-p4 <- plot.cace(output.child2) + 
+p4 <- plot.cace(output.child2) +
   ggtitle("Effect of Child Visitation on Recidivism, Moving Closer")+
   theme_bw()+
   xlab("Shift amount (driving minutes)")+
@@ -358,7 +358,7 @@ output.child2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs
                                     Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                                     zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                     nfolds = 1, pos.cutoff = Inf)
-p4 <- plot.cace(output.child2) + 
+p4 <- plot.cace(output.child2) +
   ggtitle("Effect of Child Visitation on Recidivism, Moving Closer")+
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -370,9 +370,9 @@ delta = c(20,40,60,90,120)
 outputReinc <- single.shift.range(y = dat$NCReinc3,z = dat$total_time,x = covs,
                              a = dat$no.visits.last.loc,delta = delta,
                              Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 1, pos.cutoff = Inf)
-p1 <- plot.cace(outputReinc) + 
+p1 <- plot.cace(outputReinc) +
   ggtitle("Effect of All Visitation on Re-Incarceration, Moving Away")+
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -386,7 +386,7 @@ output.childReinc <- single.shift.range(y = dat$NCReinc3,z = dat$total_time,x = 
                                    Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                                    zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                    nfolds = 1, pos.cutoff = Inf)
-p2 <- plot.cace(output.childReinc) + 
+p2 <- plot.cace(output.childReinc) +
   ggtitle("Effect of Child Visitation on Re-Incarceration, Moving Away")+
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -400,7 +400,7 @@ output2Reinc <- single.shift.range(y = dat$NCReinc3,z = dat$total_time,x = covs,
                               Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                               zmin = min(dat$minTime),zmax = max(dat$maxtime),
                               nfolds = 1, pos.cutoff = Inf)
-p3 <- plot.cace(output2Reinc) + 
+p3 <- plot.cace(output2Reinc) +
   ggtitle("Effect of All Visitation on Re-Incarceration, Moving Closer") +
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -413,7 +413,7 @@ output.child2Reinc <- single.shift.range(y = dat$NCReinc3,z = dat$total_time,x =
                                     Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                                     zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                     nfolds = 1, pos.cutoff = Inf)
-p4 <- plot.cace(output.child2Reinc) + 
+p4 <- plot.cace(output.child2Reinc) +
   ggtitle("Effect of Child Visitation on Re-Incarceration, Moving Closer")+
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -428,7 +428,7 @@ output2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                               zmin = min(dat$minTime),zmax = max(dat$maxtime),
                               nfolds = 1, pos.cutoff = Inf)
-p3 <- plot.cace(output2) + 
+p3 <- plot.cace(output2) +
   ggtitle("Effect of All Visitation on Recidivism, Moving Closer") +
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -439,7 +439,7 @@ output2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs3,
                               Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                               zmin = min(dat$minTime),zmax = max(dat$maxtime),
                               nfolds = 1, pos.cutoff = Inf)
-p3 <- plot.cace(output2) + 
+p3 <- plot.cace(output2) +
   ggtitle("Effect of All Visitation on Recidivism, Moving Closer") +
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -450,7 +450,7 @@ output.child2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs
                                     Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                                     zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                     nfolds = 1, pos.cutoff = Inf)
-p4 <- plot.cace(output.child2) + 
+p4 <- plot.cace(output.child2) +
   ggtitle("Effect of Child Visitation on Recidivism, Moving Closer")+
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -461,7 +461,7 @@ output.child2 <- single.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs
                                     Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
                                     zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                     nfolds = 1, pos.cutoff = Inf)
-p4 <- plot.cace(output.child2) + 
+p4 <- plot.cace(output.child2) +
   ggtitle("Effect of Child Visitation on Recidivism, Moving Closer")+
   theme_bw()+
   geom_hline(yintercept = 0)
@@ -538,6 +538,7 @@ temp3 = double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs4,
 write.csv(matrix(unlist(temp3[-5]),ncol = length(delta),byrow = T),file = 'deleteme2.csv')
 
 # run for reals
+# rerunning after R&R over 5 folds
 
 # first, have delta1 = -delta2
 delta1 <- c(20,40,60,90,120)
@@ -545,12 +546,12 @@ delta2 <- -delta1
 output1 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                              a = dat$no.visits.last.loc,delta1 = delta1,delta2=delta2,
                              Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2, pos.cutoff = 100)
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 5, pos.cutoff = 100)
 p <- plot.cace.double(output1)
-write.csv(matrix(unlist(output1[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEven.csv')
-ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEven.png',height = 4, width = 7)
+write.csv(matrix(unlist(output1[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEven_5foldRR.csv')
+ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEven_5foldRR.png',height = 4, width = 7)
 
-# child visitation delta1 = -delta2 
+# child visitation delta1 = -delta2
 delta1 <- c(20,40,60,90,120)
 delta2 <- -delta1
 output1c <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
@@ -558,8 +559,8 @@ output1c <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
                               zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2, pos.cutoff = 100)
 p <- plot.cace.double(output1c)
-write.csv(matrix(unlist(output1c[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEvenChild.csv')
-ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEvenChild.png',height = 4, width = 7)
+write.csv(matrix(unlist(output1c[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEvenChild_5foldRR.csv')
+ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEvenChild_5foldRR.png',height = 4, width = 7)
 
 
 # now do a moving 20 minute window
@@ -568,7 +569,7 @@ delta2 <- c(-120,-60,-20,0,40,60)
 output2 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               a = dat$no.visits.last.loc,delta1 = delta1,delta2=delta2,
                               Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
-                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2, 
+                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2,
                               pos.cutoff = 50)
 p2 <- plot.cace.double(output2)
 write.csv(matrix(unlist(output2[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftWindow.csv')
@@ -580,7 +581,7 @@ delta2 <- c(-120,-90,-60,-30,0,30,60,90)
 output3 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               a = dat$no.visits.last.loc,delta1 = delta1,delta2=delta2,
                               Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
-                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2, 
+                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2,
                               pos.cutoff = 50)
 p3 <- plot.cace.double(output3)
 write.csv(matrix(unlist(output3[-5]),ncol = length(delta1),byrow = T),file = 'dubshift30Window.csv')
@@ -592,7 +593,7 @@ delta2 <- c(-120,-60,0,60)
 output4 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               a = dat$no.visits.last.loc,delta1 = delta1,delta2=delta2,
                               Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
-                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2, 
+                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2,
                               pos.cutoff = 50)
 p4 <- plot.cace.double(output4)
 write.csv(matrix(unlist(output4[-5]),ncol = length(delta1),byrow = T),file = 'dubshift60Window.csv')
@@ -604,10 +605,10 @@ delta = c(20,30,60,90)
 output <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs3,
                              a = dat$no.visits.last.loc,delta = delta,
                              Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
-                             zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                             zmin = min(dat$minTime),zmax = max(dat$maxtime),
                              nfolds = 2, pos.cutoff = 100)
-p <- plot.cace(output) + 
-  geom_hline(yintercept = 0) + 
+p <- plot.cace(output) +
+  geom_hline(yintercept = 0) +
   theme_bw()+
   ggtitle('Increase in recidivism when visitation is lost')
 ggsave(filename = 'recidivismEs_2foldNoDummsRangRangGLM.png',p,height = 4, width = 7)
@@ -622,10 +623,10 @@ ggsave(filename = 'recidivismEst_child.png',p,height = 4, width = 7)
 output.child <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs3,
                                    a = dat$no.childvisits,delta = delta,
                                    Y.est = 'ranger', A.est = 'ranger',Z.est = 'glm',
-                                   zmin = min(dat$minTime),zmax = max(dat$maxtime), 
+                                   zmin = min(dat$minTime),zmax = max(dat$maxtime),
                                    nfolds = 2, pos.cutoff = 100)
-p <- plot.cace(output.child) + 
-  geom_hline(yintercept = 0) + 
+p <- plot.cace(output.child) +
+  geom_hline(yintercept = 0) +
   theme_bw()+
   ggtitle('Increase in recidivism when child visitation is lost')
 ggsave(filename = 'recidivismEs_child2foldNoDummsRangRangGLM.png',p,height = 4, width = 7)
