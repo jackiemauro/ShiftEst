@@ -557,7 +557,7 @@ delta2 <- -delta1
 output1c <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               a = dat$no.childvisits,delta1 = delta1,delta2=delta2,
                               Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'ranger',
-                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 2, pos.cutoff = 100)
+                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 5, pos.cutoff = 100)
 p <- plot.cace.double(output1c)
 write.csv(matrix(unlist(output1c[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEvenChild_5foldRR.csv')
 ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEvenChild_5foldRR.png',height = 4, width = 7)
