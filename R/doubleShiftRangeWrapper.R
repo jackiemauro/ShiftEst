@@ -140,29 +140,3 @@ double.shift.range <- function(y,a,z,x,delta1,delta2=NULL,Y.est,A.est,Z.est,
   return(out)
 }
 
-
-
-# psi.est <- function(delta){
-#   dat.plus = as.data.frame(cbind(z+delta, x))
-#   dat.min = as.data.frame(cbind(z-delta, x))
-#
-#   mu.hat.plus = my.pred(model = ymean, newdata = dat.plus[test,], algo = Y.est)
-#   lambda.hat.plus = my.pred(model = amean, newdata = dat.plus[test,], algo = A.est)
-#   pi.hat.plus = my.zpred(model = zmean, z = z[test], newdata = dat.plus[test,], algo = Z.est)
-#
-#   mu.hat.min = my.pred(model = ymean, newdata = dat.min[test,], algo = Y.est)
-#   lambda.hat.min = my.pred(model = amean, newdata = dat.min[test,], algo = A.est)
-#   pi.hat.min = my.zpred(model = zmean, z = z[test], newdata = dat.min[test,], algo = Z.est)
-#
-#   xi.y.delta = ((y[test] - mu.hat)*(pi.hat.min/pi.hat) - (y[test] - mu.hat.plus))*((z[test]+delta) < zmax)
-#   xi.y.Mdelta = ((y[test] - mu.hat)*(pi.hat.plus/pi.hat) - (y[test] - mu.hat.min))*((z[test]-delta) > zmin)
-#
-#   xi.a.delta = ((a[test] - lambda.hat)*(pi.hat.min/pi.hat) - (a[test] - lambda.hat.plus))*((z[test]+delta) < zmax)
-#   xi.a.Mdelta = ((a[test] - lambda.hat)*(pi.hat.plus/pi.hat) - (a[test] - lambda.hat.min))*((z[test]-delta) > zmin)
-#
-#   mean(xi.y.delta - xi.y.Mdelta)/mean(xi.a.delta - xi.a.Mdelta)
-# }
-
-
-
-
