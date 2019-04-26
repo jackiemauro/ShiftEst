@@ -1,10 +1,19 @@
+#################################################################################
+#     this file includes all code run on the data                               #
+#     without access to the dataset it will unfortunately not be reproducible   #
+#     we provide it for clarity                                                 #
+#################################################################################
+
 library(ggplot2)
 source('R/doubleShiftRangeWrapper.R')
 source('R/yMeanEst.R')
 source('R/aMeanEst.R')
 source('R/zCondlEst.R')
 
+# read in the data
 dat <- read.csv('~jacquelinemauro/MergedData.csv')[,-1]
+
+# generate covariates and outcomes
 dat$no.visits.last.loc <- (1 - dat$visitslastlocyn1)
 dat$no.childvisits <- (1 - dat$childyn)
 dat$maxtime <- apply(dat[,2:26],1,max)
@@ -16,7 +25,7 @@ options(na.action='na.pass')
 county.f = factor(dat$CountyClass); county.dummies = model.matrix(~county.f)[,-c(1,2)]
 minName.f = factor(dat$minTimeName); minName.dummies = model.matrix(~minName.f)[,-c(1,2)]
 
-# using minimum distance prison as a dummy to indicate location
+# use prison closest to home as a dummy to indicate location
 covs = cbind(white,loslastloc,minName.dummies,ageyrs,urban,priorarrests,married,violent,lsirscore,
              highschoolgrad,custody_level,numofpriorinc,mh,dat[,c(startdummy:(enddummy-1))],numoftotalmisconducts)
 
@@ -24,7 +33,7 @@ detach(dat)
 old.names <- names(covs)
 names(covs) <- sapply(c(1:dim(covs)[2]), function(k) paste('x',k,sep = ""))
 
-#### summary stats ####
+#### summary statistics ####
 library(plyr)
 library(xtable)
 
@@ -75,7 +84,8 @@ print(x, type = 'latex','summaryStatsNoparole.tex')
 x = xtable(t(out.tab))
 print(x, type = 'latex','summaryStatsNoparoleSds.tex')
 
-# first, have delta1 = -delta2
+########## run double shift estimators ########
+# main results
 delta1 <- c(20,40,60,90,120)
 delta2 <- -delta1
 output1 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
@@ -86,7 +96,7 @@ p <- plot.cace.double(output1)
 write.csv(matrix(unlist(output1[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEven_5foldRR.csv')
 ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEven_5foldRR.png',height = 4, width = 7)
 
-# child visitation delta1 = -delta2
+# child visitation
 delta1 <- c(20,40,60,90,120)
 delta2 <- -delta1
 output1c <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
@@ -97,6 +107,16 @@ p <- plot.cace.double(output1c)
 write.csv(matrix(unlist(output1c[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEvenChild_5foldRR.csv')
 ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEvenChild_5foldRR.png',height = 4, width = 7)
 
+# using less flexible conditional density estimator
+delta1 <- c(20,40,60,90,120)
+delta2 <- -delta1
+output1 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
+                              a = dat$no.visits.last.loc,delta1 = delta1,delta2=delta2,
+                              Y.est = 'superlearner', A.est = 'superlearner',Z.est = 'glm',
+                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 5, pos.cutoff = 100)
+p <- plot.cace.double(output1)
+write.csv(matrix(unlist(output1[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEven_glm_5foldRR.csv')
+ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEven_glm_5foldRR.png',height = 4, width = 7)
 
 
 # not done:
