@@ -9,6 +9,7 @@ source('R/doubleShiftRangeWrapper.R')
 source('R/yMeanEst.R')
 source('R/aMeanEst.R')
 source('R/zCondlEst.R')
+source('R/HelperFunctions.R')
 
 # read in the data
 dat <- read.csv('~jacquelinemauro/MergedData.csv')[,-1]
@@ -119,8 +120,9 @@ write.csv(matrix(unlist(output1[-5]),ncol = length(delta1),byrow = T),file = 'du
 ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEven_glm_5foldRR.png',height = 4, width = 7)
 
 
-# not done:
-# now do a moving 20 minute window
+################# other intervention options ####################
+# instead of double shift, create moving windows for different client populations(not done)
+# 20 minute window
 delta1 <- c(-100,-40,0,20,60,120)
 delta2 <- c(-120,-60,-20,0,40,60)
 output2 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,

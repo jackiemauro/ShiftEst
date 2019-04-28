@@ -47,7 +47,6 @@ length(which(z[x==0]+delta>Upp.lim0))+length(which(z[x==0]-delta<Low.lim0))+
 1-ptruncnorm(Upp.lim0-delta,Low.lim0,Upp.lim0,min(mu),.5)
 
 
-
 ############## rate simulations (figure 2) ###########
 rm(list = ls())
 
@@ -55,11 +54,11 @@ today = format(Sys.time(), "%Y%m%d")
 set.seed(123)
 library(ggplot2)
 library(AER)
+library(gridExtra)
 
-# error to add to nuisance parameters
-reg.error <- function(z){rnorm(N, z/2 + 2, 1)/B}
-rat.errorP <- function(delta,df){rnorm(N,1,1)/B}
-rat.errorM <- function(delta,df){rnorm(N,1,1)/B}
+# errors to add to nuisance parameters -- change these to test the effects of different error terms
+reg.error <- function(z){rnorm(N, 2*z + 1, 1)/B}
+rat.error <- function(z){rnorm(N,1,1)/B}
 
 # functions to simulate and estimate
 simFunc <- function(N=5000,delta = 1, psi = 2, zmax = Inf, zmin = -Inf){
@@ -94,16 +93,16 @@ f.num <- function(df){
   mu0 = df$true.ymean + reg.error(df$z)
   muP = df$true.ymean.plus + reg.error(df$z+delta)
   muM = df$true.ymean.min + reg.error(df$z-delta)
-  ratM = df$true.z.min/df$true.z + rat.errorM(delta,df)
-  ratP = df$true.z.plus/df$true.z + rat.errorP(delta,df)
+  ratM = df$true.z.min/df$true.z + rat.error(df$z-delta)
+  ratP = df$true.z.plus/df$true.z + rat.error(df$z+delta)
   (ratM*(df$y - mu0) + muP) - (ratP*(df$y - mu0) + muM)
 }
 f.den <- function(df){
   la0 = df$true.amean + reg.error(df$z)
   laP = df$true.amean.plus + reg.error(df$z+delta)
   laM = df$true.amean.min + reg.error(df$z-delta)
-  ratM = df$true.z.min/df$true.z + rat.errorM(delta,df)
-  ratP = df$true.z.plus/df$true.z + rat.errorP(delta,df)
+  ratM = df$true.z.min/df$true.z + rat.error(df$z-delta)
+  ratP = df$true.z.plus/df$true.z + rat.error(df$z+delta)
   (ratM*(df$a - la0) + laP) - (ratP*(df$a - la0) + laM)
 }
 pi.num <- function(df){(df$true.ymean.plus+reg.error(df$z+delta)) - (df$true.ymean.min + reg.error(df$z-delta))}
@@ -122,13 +121,6 @@ single.delta <- function(delta){
   tsls.sds = unlist(lapply(dfs, function(df) get_tsls_sd(df)))
   return(data.frame(if.ests = if.ests, pi.ests = pi.ests, th.sds = th.sds, tsls.ests = tsls.ests, tsls.sds = tsls.sds))
 }
-
-# simulation parameters
-n.sim = 500
-deltas = seq(.5,4,length.out = 15)
-K = c(1.99,2.99,3.99,5.99)
-Ns = c(100,1000,5000,10000)
-
 
 # run the simulation across all sample sizes and shift values
 psi <- true.eff <- 2
@@ -173,6 +165,7 @@ for(s.size in 1:length(Ns)){
 # save the output
 lapply(output, function(k) write.csv(k,file=paste("~/Dropbox/double robust causality/df_",k$s.size[1],"_",today,".csv",sep="")))
 
+# make figures
 make.my.plot <- function(df){
   ggplot(df) +
     geom_hline(yintercept = psi, colour = 'red')+
@@ -190,6 +183,22 @@ make.my.plot <- function(df){
 }
 plots <- lapply(output, function(x) make.my.plot(x[x$type != "TSLS",]))
 for(i in 1:length(plots)){ggsave(plot = plots[[i]], filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_",Ns[i],today,".png", sep = ""), height = 4, width = 7)}
+all.output <- do.call(rbind.data.frame, output)
+combo.plot <- ggplot(all.output[(all.output$type!="TSLS")&(all.output$s.size!=5000),]) +
+  geom_hline(yintercept = psi, colour = 'red')+
+  geom_point(aes(x = delta.val, y = mean, shape = type))+
+  geom_line(aes(x = delta.val, y = mean, colour = type))+
+  geom_ribbon(aes(ymin = lower.emp, ymax = upper.emp, x = delta.val, fill = type), alpha = .3) +
+  facet_wrap(~s.size + rate.val)+
+  theme_bw() +
+  scale_color_manual(values = c('black', 'grey'))+
+  scale_fill_manual(values = c('black', 'grey'))+
+  theme(legend.position="bottom")+
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(y = paste('Estimates (',n.sim,' simulations)', sep = ""), x = "Shift Amount",
+       title = "Estimates by estimator type, error rate and shift amount")
+ggsave(plot = combo.plot, filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_combo_",today,".png", sep = ""), height = 8, width = 7)
+
 
 make.my.plot.cf <- function(df){
   # use closed form CI's
