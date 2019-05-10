@@ -1,4 +1,4 @@
-#' Double Shift Estimator Across Delta Range -- not right yet
+#' Double Shift Estimator Across Delta Range
 #'
 #' @description Estimates the effects of two shift amounts
 #' across a range of values. Includes the multiplier bootstrap
@@ -11,7 +11,7 @@
 #' @param delta1 a vector of shift levels
 #' @param delta2 a vector of shift levels, should be smaller than delta1.
 #' If delta2 is not specified, it will automatically set to be -delta1. For single
-#' shift, should be able to set this to 0.
+#' shift, set this to 0.
 #' @param Y.est an algorithm for estimating the means of your outcome.
 #' Should be 'glm', 'superlearner' or 'ranger'. If you choose superlearner,
 #' you can also specify the libraries you would like to use. Default libraries
@@ -21,9 +21,9 @@
 #' you can also specify the libraries you would like to use. Default libraries
 #' are c("SL.glm","SL.randomForest","SL.polymars","SL.mean").
 #' @param Z.est an algorithm for estimating the means of your treatment.
-#' Should be 'glm' in which case a glm is used to estimte the mean and variance
-#' and a kernel is used to estimate the density, or 'flexcode'. If you choose
-#' 'flexcode', you can specify the regression function. The default is regressionFunction.NW
+#' Should be 'glm', 'ranger' or 'flexcode'. If glm/ranger is selected, glm/ranger is used
+#' to estimte the mean and variance and a kernel is used to estimate the density. If you choose
+#' 'flexcode', you can specify the regression function. The default is regressionFunction.NW.
 #' @param nfolds number of folds. Defaults to 2
 #' @param zmax the upper bound on Z, default is Inf
 #' @param zmin the lower bound on Z, default is -Inf
@@ -35,10 +35,6 @@
 #' @return a list including an estimate of the effect for each delta value and its standard deviation,
 #' as well as upper and lower confidence intervals for the pointwise and uniform case.
 
-# current issues:
-# note that this is E(Y^1 - Y^0 | A^{Z+d1} > A^{Z+d2}) rather than Z+delta > Z-delta
-# if delta2 is not specified, we take delta2 = -delta1 to recover Z+delta > Z-delta
-#need to drop out infinite values of x as well
 
 double.shift.range <- function(y,a,z,x,delta1,delta2=NULL,Y.est,A.est,Z.est,
                                nfolds = 2, zmax = Inf, zmin = -Inf,

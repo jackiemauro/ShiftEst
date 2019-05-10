@@ -32,7 +32,7 @@ z.condldens.est <- function(z,x,algorithm,regFunc = regressionFunction.NN){
                     regressionFunction.extra=list(nCores=3),verbose = T)
   }
 
-  else{stop('Use flexcode or glm as algorithm')}
+  else{stop('Use flexcode, ranger or glm as algorithm')}
 
   return(out)
 }
