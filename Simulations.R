@@ -57,6 +57,11 @@ library(AER)
 library(gridExtra)
 
 # errors to add to nuisance parameters -- change these to test the effects of different error terms
+
+# these work too:
+# mu.error <- function(z){rnorm(N, expit(z), 1)/B}
+# la.error <- function(z){rnorm(N, expit(z), 1)/B}
+
 mu.error <- function(z){rnorm(N, 2*z + 1, 1)/B}
 la.error <- function(z){rnorm(N, 2*z + 1, 1)/B}
 rat.error <- function(z){rnorm(N,1,1)/B}
