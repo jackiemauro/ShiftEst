@@ -51,6 +51,7 @@ length(which(z[x==0]+delta>Upp.lim0))+length(which(z[x==0]-delta<Low.lim0))+
 rm(list = ls())
 
 today = format(Sys.time(), "%Y%m%d")
+SAVE = FALSE
 set.seed(123)
 library(ggplot2)
 library(AER)
@@ -58,18 +59,29 @@ library(gridExtra)
 
 # errors to add to nuisance parameters -- change these to test the effects of different error terms
 
-# these work too:
+# examples of error terms you can try:
 # mu.error <- function(z){rnorm(N, expit(z), 1)/B}
 # la.error <- function(z){rnorm(N, expit(z), 1)/B}
+# mu.error <- function(z){rnorm(N, 2*z + 1, 1)/B}
+# la.error <- function(z){rnorm(N, 2*z + 1, 1)/B}
+mu.error <- function(z){rnorm(N, 1, 20)/B}
+la.error <- function(z){rnorm(N, 1, 20)/B}
+rat.error <- function(z){rnorm(N, 1, 20)/B}
 
-mu.error <- function(z){rnorm(N, 2*z + 1, 1)/B}
-la.error <- function(z){rnorm(N, 2*z + 1, 1)/B}
-rat.error <- function(z){rnorm(N,1,1)/B}
-n.sim = 500
-deltas = seq(.5,4,length.out = 15)
-K = c(1.99,2.99,3.99,5.99)
-Ns = c(100,1000,5000,10000)
-
+if(SAVE){
+  # full run parameters
+  n.sim = 500
+  deltas = seq(.5,4,length.out = 15)
+  K = c(1.99,2.99,3.99,5.99)
+  Ns = c(100,1000,5000,10000)
+}
+if(!SAVE){
+  # test a smaller number of simulations
+  n.sim = 50
+  deltas = seq(.5,4,length.out = 5)
+  K = c(1.99,2.99,3.99,5.99)
+  Ns = 5000
+}
 
 # functions to simulate and estimate
 simFunc <- function(N=5000,delta = 1, psi = 2, zmax = Inf, zmin = -Inf){
@@ -173,9 +185,6 @@ for(s.size in 1:length(Ns)){
   output[[s.size]] = out
 }
 
-# save the output
-#lapply(output, function(k) write.csv(k,file=paste("~/Dropbox/double robust causality/df_",k$s.size[1],"_",today,".csv",sep="")))
-
 # make figures
 make.my.plot <- function(df){
   ggplot(df) +
@@ -193,7 +202,6 @@ make.my.plot <- function(df){
          title = "Estimates by estimator type, error rate and shift amount")
 }
 plots <- lapply(output, function(x) make.my.plot(x[x$type != "TSLS",]))
-#for(i in 1:length(plots)){ggsave(plot = plots[[i]], filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_",Ns[i],today,".png", sep = ""), height = 4, width = 7)}
 all.output <- do.call(rbind.data.frame, output)
 combo.plot <- ggplot(all.output[(all.output$type!="TSLS")&(all.output$s.size!=5000),]) +
   geom_hline(yintercept = psi, colour = 'red')+
@@ -208,9 +216,6 @@ combo.plot <- ggplot(all.output[(all.output$type!="TSLS")&(all.output$s.size!=50
   coord_cartesian(ylim = c(0, 4)) +
   labs(y = paste('Estimates (',n.sim,' simulations)', sep = ""), x = "Shift Amount",
        title = "Estimates by estimator type, error rate and shift amount")
-#ggsave(plot = combo.plot, filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_combo_",today,".png", sep = ""), height = 8, width = 7)
-
-
 make.my.plot.cf <- function(df){
   # use closed form CI's
   ggplot(df) +
@@ -228,4 +233,11 @@ make.my.plot.cf <- function(df){
          title = "Estimates by estimator type, error rate and shift amount (closed form SD)")
 }
 plots.cf <- lapply(output, function(x) make.my.plot.cf(x[x$type != "TSLS",]))
-#for(i in 1:length(plots)){ggsave(plot = plots.cf[[i]], filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_",Ns[i],today,"_cf.png", sep = ""), height = 4, width = 7)}
+
+# save the output
+if(SAVE){
+  lapply(output, function(k) write.csv(k,file=paste("~/Dropbox/double robust causality/df_",k$s.size[1],"_",today,".csv",sep="")))
+  ggsave(plot = combo.plot, filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_combo_",today,".png", sep = ""), height = 8, width = 7)
+  for(i in 1:length(plots)){ggsave(plot = plots[[i]], filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_",Ns[i],today,".png", sep = ""), height = 4, width = 7)}
+  for(i in 1:length(plots)){ggsave(plot = plots.cf[[i]], filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_",Ns[i],today,"_cf.png", sep = ""), height = 4, width = 7)}
+}
