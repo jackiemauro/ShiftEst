@@ -25,20 +25,22 @@ z <- rep(-5, N)
 for(i in 1:N){while(  (z[i]<Low.lim[i]) | (z[i]>Upp.lim[i])  ){z[i] <- rnorm(1, mu[i], .5)}}
 
 delta = .1
-g2<-ggplot()+
-  geom_histogram(aes(z[x==1], fill = 'X=1'), alpha = .7, bins = 50)+
-  geom_histogram(aes(z[x==0], fill = 'X=0'), alpha = .7, bins = 50)+
+g2<-ggplot()+geom_histogram(aes(z2[x2==1], fill = 'X=1'), alpha = .7, bins = 50)+
+  geom_histogram(aes(z2[x2==0], fill = 'X=0'), alpha = .7, bins = 50)+
   theme_bw()+
-  geom_rect(aes(xmin=Upp.lim0-delta, xmax=Upp.lim0, ymin=-1, ymax=length(z)/100), color = 'black',alpha=0.7)+
-  geom_rect(aes(xmin=Low.lim0, xmax=Low.lim0+delta, ymin=-1, ymax=length(z)/100), color = 'black',alpha=0.7)+
-  geom_rect(aes(xmin=Low.lim1, xmax=Low.lim1+delta, ymin=-1, ymax=length(z)/100), color = 'black',alpha=0.7)+
-  geom_rect(aes(xmin=Upp.lim1-delta, xmax=Upp.lim1, ymin=-1, ymax=length(z)/100), color = 'black',alpha=0.7)+
-  geom_rect(aes(xmin=Upp.lim0, xmax=Upp.lim1, ymin=-1, ymax=length(z)/100), color = 'black',alpha=0.2)+
-  geom_rect(aes(xmin=Low.lim0, xmax=Low.lim1, ymin=-1, ymax=length(z)/100), color = 'black',alpha=0.2)+
+  geom_rect(aes(xmin=Upp.lim0-delta, xmax=Upp.lim0, ymin=-1, ymax=250), color = 'black',alpha=0.8)+
+  geom_rect(aes(xmin=Low.lim0, xmax=Low.lim0+delta, ymin=-1, ymax=250), color = 'black',alpha=0.8)+
+  geom_rect(aes(xmin=Low.lim1, xmax=Low.lim1+delta, ymin=-1, ymax=250), color = 'black',alpha=0.8)+
+  geom_rect(aes(xmin=Upp.lim1-delta, xmax=Upp.lim1, ymin=-1, ymax=250), color = 'black',alpha=0.8)+
+  geom_rect(aes(xmin=Upp.lim0, xmax=Upp.lim1, ymin=-1, ymax=250), color = 'black',alpha=0.2)+
+  geom_rect(aes(xmin=Low.lim0, xmax=Low.lim1, ymin=-1, ymax=250), color = 'black',alpha=0.2)+
+  annotate(geom = 'text', x = -.5, y = 150, label = "X=0")+
+  annotate(geom = 'text', x = .5, y = 150, label = "X=1")+
   xlab("Z") + ylab("Frequency")+
   scale_fill_grey(start = 0, end = .5)+
   guides(fill=FALSE)+
-  ggtitle("Low Overlap")
+  ggtitle("Low Overlap on a Single Binary Covariate X")
+g2
 ggsave(filename = 'PosOverlap4bars.png', g2, width = 7, height = 4)
 
 # check how likely positivity violations are
@@ -51,14 +53,15 @@ length(which(z[x==0]+delta>Upp.lim0))+length(which(z[x==0]-delta<Low.lim0))+
 rm(list = ls())
 
 today = format(Sys.time(), "%Y%m%d")
-SAVE = FALSE
+SAVE = FALSE                                          #set SAVE = TRUE when you want to run the full simulation and save the outputs
+root = "~/Dropbox/double robust causality/"           #where to save outputs
 set.seed(123)
+
 library(ggplot2)
 library(AER)
 library(gridExtra)
 
 # errors to add to nuisance parameters -- change these to test the effects of different error terms
-
 # examples of error terms you can try:
 # mu.error <- function(z){rnorm(N, expit(z), 1)/B}
 # la.error <- function(z){rnorm(N, expit(z), 1)/B}
@@ -236,8 +239,8 @@ plots.cf <- lapply(output, function(x) make.my.plot.cf(x[x$type != "TSLS",]))
 
 # save the output
 if(SAVE){
-  lapply(output, function(k) write.csv(k,file=paste("~/Dropbox/double robust causality/df_",k$s.size[1],"_",today,".csv",sep="")))
-  ggsave(plot = combo.plot, filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_combo_",today,".png", sep = ""), height = 8, width = 7)
-  for(i in 1:length(plots)){ggsave(plot = plots[[i]], filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_",Ns[i],today,".png", sep = ""), height = 4, width = 7)}
-  for(i in 1:length(plots)){ggsave(plot = plots.cf[[i]], filename = paste("~/Dropbox/double robust causality/Figures/simulation_plot_",Ns[i],today,"_cf.png", sep = ""), height = 4, width = 7)}
+  lapply(output, function(k) write.csv(k,file=paste("df_",k$s.size[1],"_",today,".csv",sep="")))
+  ggsave(plot = combo.plot, filename = paste(root,"Figures/simulation_plot_combo_",today,".png", sep = ""), height = 8, width = 7)
+  for(i in 1:length(plots)){ggsave(plot = plots[[i]], filename = paste(root,"Figures/simulation_plot_",Ns[i],today,".png", sep = ""), height = 4, width = 7)}
+  for(i in 1:length(plots)){ggsave(plot = plots.cf[[i]], filename = paste(root,"Figures/simulation_plot_",Ns[i],today,"_cf.png", sep = ""), height = 4, width = 7)}
 }
