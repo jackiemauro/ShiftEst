@@ -42,6 +42,33 @@ sumstats = ddply(dat, .(visitslastlocyn1), summarize,
                  recidivate = mean(NCRecid3,na.rm = T),
                  #minTime = mean(minTime,na.rm = T),
                  currentTime = mean(total_time,na.rm = T),
+                 county = mean(CountyClass, na.rm = T),
+                 lengthofstay = mean(loslastloc,na.rm = T),
+                 white = mean(white,na.rm = T),
+                 age = mean(ageyrs,na.rm = T),
+                 urban = mean(urban,na.rm = T),
+                 married = mean(married,na.rm = T),
+                 mentalhealth = mean(mh,na.rm = T),
+                 highschool = mean(highschoolgrad,na.rm = T),
+                 violent = mean(violent,na.rm = T),
+                 score = mean(lsirscore,na.rm = T),
+                 numberofvisits = mean(visitslastloc1,na.rm = T),
+                 custodylevel  =mean(custody_level,na.rm = T),
+                 priorarrests = mean(priorarrests,na.rm = T),
+                 priorincarcerations = mean(numofpriorinc,na.rm = T),
+                 misconducts = mean(numofmisconductslastloc,na.rm = T)
+)
+
+sumstats_county = ddply(cbind(dat,county.dummies), .(visitslastlocyn1), summarize,
+                 recidivate = mean(NCRecid3,na.rm = T),
+                 #minTime = mean(minTime,na.rm = T),
+                 currentTime = mean(total_time,na.rm = T),
+                 county3 = mean(county.f3, na.rm = T),
+                 county4 = mean(county.f4, na.rm = T),
+                 county5 = mean(county.f5, na.rm = T),
+                 county6 = mean(county.f6, na.rm = T),
+                 county7 = mean(county.f7, na.rm = T),
+                 county8 = mean(county.f8, na.rm = T),
                  lengthofstay = mean(loslastloc,na.rm = T),
                  white = mean(white,na.rm = T),
                  age = mean(ageyrs,na.rm = T),
@@ -82,6 +109,10 @@ out.tab = rbind(sumstats[1,],sds[1,],sumstats[2,],sds[2,])
 library(xtable)
 x = xtable(t(sumstats))
 print(x, type = 'latex','summaryStatsNoparole.tex')
+out.tab = rbind(sumstats[1,],sds[1,],sumstats[2,],sds[2,])
+library(xtable)
+x = xtable(t(sumstats_county))
+print(x, type = 'latex','summaryStatsNoparoleCounty.tex')
 x = xtable(t(out.tab))
 print(x, type = 'latex','summaryStatsNoparoleSds.tex')
 
