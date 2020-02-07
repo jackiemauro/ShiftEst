@@ -41,6 +41,11 @@ double.shift.range <- function(y,a,z,x,delta1,delta2=NULL,Y.est,A.est,Z.est,
                                alpha = 0.05, nbs = 10000,
                                pos.cutoff = 500, ...){
 
+  source('yMeanEst.R')
+  source('aMeanEst.R')
+  source('zCondlEst.R')
+  source('HelperFunctions.R')
+
   # initial data checks
   N = length(y); j = length(delta1)
   if(any(length(a)!=N,length(z)!=N,dim(x)[1]!=N)){stop('y,a,z and x must be same length')}

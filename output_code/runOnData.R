@@ -6,10 +6,6 @@
 
 library(ggplot2)
 source('R/doubleShiftRangeWrapper.R')
-source('R/yMeanEst.R')
-source('R/aMeanEst.R')
-source('R/zCondlEst.R')
-source('R/HelperFunctions.R')
 
 # read in the data
 dat <- read.csv('~jacquelinemauro/MergedData.csv')[,-1]
@@ -24,6 +20,7 @@ attach(dat)
 startdummy = which(names(dat)=='alb'); enddummy = which(names(dat)=='pit')
 options(na.action='na.pass')
 county.f = factor(dat$CountyClass); county.dummies = model.matrix(~county.f)[,-c(1,2)]
+county.dummies2 = model.matrix(~county.f)[,-c(1)]
 minName.f = factor(dat$minTimeName); minName.dummies = model.matrix(~minName.f)[,-c(1,2)]
 
 # use prison closest to home as a dummy to indicate location
@@ -59,10 +56,11 @@ sumstats = ddply(dat, .(visitslastlocyn1), summarize,
                  misconducts = mean(numofmisconductslastloc,na.rm = T)
 )
 
-sumstats_county = ddply(cbind(dat,county.dummies), .(visitslastlocyn1), summarize,
+sumstats_county = ddply(cbind(dat,county.dummies2), .(visitslastlocyn1), summarize,
                  recidivate = mean(NCRecid3,na.rm = T),
                  #minTime = mean(minTime,na.rm = T),
                  currentTime = mean(total_time,na.rm = T),
+                 county2 = mean(county.f2, na.rm = T),
                  county3 = mean(county.f3, na.rm = T),
                  county4 = mean(county.f4, na.rm = T),
                  county5 = mean(county.f5, na.rm = T),
@@ -126,7 +124,7 @@ output1 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                              zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 5, pos.cutoff = 100)
 p <- plot.cace.double(output1)
 write.csv(matrix(unlist(output1[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEven_5foldRR.csv')
-ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEven_5foldRR.png',height = 4, width = 7)
+ggsave(plot = p, filename = 'DubShiftEven_5foldRR.png',height = 4, width = 7)
 
 # child visitation
 delta1 <- c(20,40,60,90,120)
@@ -137,7 +135,7 @@ output1c <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 5, pos.cutoff = 100)
 p <- plot.cace.double(output1c)
 write.csv(matrix(unlist(output1c[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEvenChild_5foldRR.csv')
-ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEvenChild_5foldRR.png',height = 4, width = 7)
+ggsave(plot = p, filename = 'DubShiftEvenChild_5foldRR.png',height = 4, width = 7)
 
 # using less flexible conditional density estimator
 delta1 <- c(20,40,60,90,120)
@@ -148,7 +146,7 @@ output1 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               zmin = min(dat$minTime),zmax = max(dat$maxtime), nfolds = 5, pos.cutoff = 100)
 p <- plot.cace.double(output1)
 write.csv(matrix(unlist(output1[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftEven_glm_5foldRR.csv')
-ggsave(plot = p, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftEven_glm_5foldRR.png',height = 4, width = 7)
+ggsave(plot = p, filename = 'DubShiftEven_glm_5foldRR.png',height = 4, width = 7)
 
 
 ################# other intervention options ####################
@@ -163,7 +161,7 @@ output2 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               pos.cutoff = 50)
 p2 <- plot.cace.double(output2)
 write.csv(matrix(unlist(output2[-5]),ncol = length(delta1),byrow = T),file = 'dubshiftWindow.csv')
-ggsave(plot = p2, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShiftWindow.png',height = 4, width = 7)
+ggsave(plot = p2, filename = 'DubShiftWindow.png',height = 4, width = 7)
 
 # 30 minute window
 delta1 <- c(-90,-60,-30,0,30,60,90,120)
@@ -175,7 +173,7 @@ output3 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               pos.cutoff = 50)
 p3 <- plot.cace.double(output3)
 write.csv(matrix(unlist(output3[-5]),ncol = length(delta1),byrow = T),file = 'dubshift30Window.csv')
-ggsave(plot = p3, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShift30Window.png',height = 4, width = 7)
+ggsave(plot = p3, filename = 'DubShift30Window.png',height = 4, width = 7)
 
 # 60 minute window
 delta1 <- c(-120,-60,0,60,120,180)
@@ -187,7 +185,7 @@ output4 <- double.shift.range(y = dat$NCRecid3,z = dat$total_time,x = covs,
                               pos.cutoff = 50)
 p4 <- plot.cace.double(output4)
 write.csv(matrix(unlist(output4[-5]),ncol = length(delta1),byrow = T),file = 'dubshift60Window.csv')
-ggsave(plot = p4, filename = '~jacquelinemauro/Dropbox/double robust causality/Figures/DubShift60Window.png',height = 4, width = 7)
+ggsave(plot = p4, filename = 'DubShift60Window.png',height = 4, width = 7)
 
 ############ run tsls #################
 library(AER)
@@ -200,7 +198,7 @@ names(df) <- c('Recid', 'no.visits.last.loc', 'total_time', old.names)
 # linear specification
 tsls.form <- as.formula(paste("Recid~no.visits.last.loc+",paste(names(covs),collapse = "+"),"| total_time +",paste(names(covs),collapse = "+")))
 tsls<- ivreg(tsls.form, data = df)
-print(xtable(summary(tsls)$coefficients),type = "latex",file = "~/Dropbox/double robust causality/TSLS_output_RR.tex")
+print(xtable(summary(tsls)$coefficients),type = "latex",file = "TSLS_output_RR.tex")
 
 # more flexible specification -- just putting default splines on all non-binary variables
 library(splines)
@@ -228,4 +226,4 @@ tsls.spline <- ivreg(Recid ~ no.visits.last.loc + white + bs(loslastloc) + minNa
                        smi + smr + wam + bs(numoftotalmisconducts), data = df)
 
 summary(tsls.spline)
-print(xtable(summary(tsls.spline)$coefficients),type = "latex",file = "~/Dropbox/double robust causality/TSLS_splines_output_RR.tex")
+print(xtable(summary(tsls.spline)$coefficients),type = "latex",file = "TSLS_splines_output_RR.tex")
